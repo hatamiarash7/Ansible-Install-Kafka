@@ -48,6 +48,28 @@ We have two service for Kafka and two for ZK.
 
 You can use `bootstrap` service to handle connections between your apps and Kafka cluster.
 
+## Monitoring
+
+The Java virtual machine (Java VM) has built-in instrumentation that enables you to monitor and manage it using the **Java Management Extensions (JMX)** technology. These built-in management utilities are often referred to as _out-of-the-box_ management tools for the Java VM. You can also monitor any appropriately instrumented applications using the JMX API.
+
+We have a second container in every Kafka POD to handle this.
+
+```yml
+- name: metrics
+  command:
+      - java
+      - -jar
+      - jmx.jar
+      - "5556"
+      - config.yml
+  ports:
+      - containerPort: 5556
+```
+
+Later, you can use this container to monitor your Kafka cluster.
+
+> Update [13-metrics-config.yml](/files/manifests/kafka/13-metrics-config.yml) to configure metrics.
+
 ---
 
 ## Support 💛
