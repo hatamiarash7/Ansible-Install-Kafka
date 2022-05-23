@@ -1,0 +1,5 @@
+resources:
+  - 10-storage.yml
+  - 11-zoo-service-cluster.yml
+  - 12-zoo-service.yml
+  - 13-zoo.yml

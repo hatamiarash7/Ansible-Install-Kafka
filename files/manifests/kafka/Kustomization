@@ -1,0 +1,7 @@
+resources:
+  - 01-storage.yml
+  - 10-config-broker.yml
+  - 11-dns.yml
+  - 12-bootstrap-service.yml
+  - 13-metrics-config.yml
+  - 14-kafka.yml

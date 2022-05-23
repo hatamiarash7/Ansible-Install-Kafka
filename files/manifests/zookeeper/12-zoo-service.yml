@@ -1,0 +1,14 @@
+# Headless service is for DNS, this one is for clients
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: zookeeper
+  name: zookeeper
+  namespace: kafka
+spec:
+  ports:
+    - port: 2181
+      name: client
+  selector:
+    app: zookeeper

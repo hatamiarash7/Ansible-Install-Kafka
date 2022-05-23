@@ -1,0 +1,53 @@
+---
+- include_tasks: setFacts.yml
+
+- name: Create manifests directory
+  become: true
+  ansible.builtin.file:
+    path: /tmp/kafka
+    state: directory
+    mode: "0755"
+
+- name: Archive manifests # It's faster than normal copy
+  become: true
+  become_user: "{{ ansible_host_user }}"
+  delegate_to: 127.0.0.1
+  ansible.builtin.shell: tar czf {{ role_path }}/files/kafka.tar.gz --directory={{ role_path }}/files manifests
+
+- name: Copying files
+  ansible.builtin.copy:
+    src: "kafka.tar.gz"
+    dest: "/tmp/kafka.tar.gz"
+
+- name: Unarchive manifests
+  become: true
+  ansible.builtin.unarchive:
+    src: "/tmp/kafka.tar.gz"
+    dest: "/tmp/kafka"
+    remote_src: true
+
+- name: Create namespace
+  ansible.builtin.shell: |
+    set -o pipefail && kubectl create namespace kafka --dry-run=client -o yaml | kubectl apply -f -
+
+- name: Deploy Kafka
+  ansible.builtin.shell: kubectl apply -k /tmp/kafka/manifests/init
+
+- name: Remove local archive
+  become: true
+  become_user: "{{ ansible_host_user }}"
+  delegate_to: 127.0.0.1
+  ansible.builtin.file:
+    state: absent
+    path: "{{ role_path }}/files/kafka.tar.gz"
+
+- name: Wait until stack is in ready state
+  become: true
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  ansible.builtin.shell: |
+    set -o pipefail && kubectl -n kafka get pod | grep -Po '^([^ ]+)(?=\s+((\d+)\/\3))'
+  register: stack_status
+  until: stack_status.stdout_lines | length == 6
+  delay: 10
+  retries: 30
